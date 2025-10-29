@@ -1,149 +1,147 @@
 # RobotFollow
-此项目用作帮助用户实现Mercury系列机型(A1/B1/X1)的手臂跟随效果
+This project helps users achieve arm tracking for Mercury series robots (A1/B1/X1).
 
-## 1.跟随效果
+## 1. Following Effect
 
-### 1.1 鼠标跟踪
+### 1.1 Mouse Tracking
 
 <img src="resource\mouse.gif">
 
-### 1.2 外骨骼控制
+### 1.2 Exoskeleton Control
 
 <img src="resource\exoskeleton.gif">
 
-
-### 1.3 VR控制
+### 1.3 VR Control
 
 <img src="resource\VR.gif">
 
-## 2.运动模式说明
+## 2. Motion Mode Description
 
-### 2.1 点位控制模式PTP
+### 2.1 Point-to-Point Control Mode (PTP)
 
-PTP模式是机械臂**默认**的控制方法，机械臂以0的起始\终止速度运动到目标位置，适用于绝大部分的应用场景
+PTP mode is the default control method for robotic arms. The arm moves to the target position with a starting and ending velocity of 0. It is suitable for most application scenarios.
 
 <img src="resource\PTP.png">
 
-其速度规划曲线如下：
+The velocity planning curve is as follows:
 
 <img src="resource\ptp_speed.png">
 
-当连续调用PTP接口时，可以看到在运动衔接处存在速度的启停：
+When the PTP interface is called continuously, you can see that there is a start and stop of speed at the joint of movement:
 
 <img src="resource\ptp_speed2.png">
 
+Use the following interface to switch to PTP mode, where MovJ indicates that **non-linear trajectory** is executed during coordinate movement, and MovL indicates that **linear trajectory** is executed during coordinate movement
 
+set_movement_type(0) #MovJ non-linear movement
+set_movement_type(1) #MovL linear movement (default)
 
-使用以下接口可切换至PTP模式，其中MovJ表示坐标运动时执行**非直线轨迹**，MovL表示坐标运动时执行**直线轨迹**
+**In PTP mode, multi-point cache is supported, and the controller will execute the cached motion instructions in sequence**
 
-    set_movement_type(0) #MovJ非直线运动
-    set_movement_type(1) #MovL直线运动（默认）
+### 2.2 Continuous trajectory control mode CP
 
-**在PTP模式下支持多点位的缓存，控制器会依次执行缓存的运动指令**
-
-### 2.2 连续轨迹控制模式CP
-
-CP模式支持连续的轨迹、速度控制
+CP mode supports continuous trajectory and speed control
 
 <img src="resource\CP.png">
 
-其速度规划曲线如下，**可以看到在运动衔接处速度未降到零**：
+The speed planning curve is as follows, **you can see that the speed does not drop to zero at the joint of movement**:
 
 <img src="resource\cp_speed.png">
 
-使用以下接口可切换至CP模式
+Use the following interface to switch to CP mode
 
-    set_movement_type(4) #CP
+set_movement_type(4) #CP
 
-**在CP模式下不支持多点位的缓存，控制器会始终执行最新一条运动指令，指令衔接不会导致机械臂停止，而是在原速度的基础上继续规划**
+**In CP mode, multi-point caching is not supported. The controller will always execute the latest motion command. Command connection will not cause the robot arm to stop, but will continue planning based on the original speed**
 
-### 2.3 速度融合模式FUSION
+### 2.3 Speed ​​Fusion Mode
 
-FUSION模式不是一个通用的控制模式，它是为了适配VR遥操作、外骨骼跟随等应用场景的**高速响应**模式，在CP模式中我们可以做到运动指令的速度衔接，但由于无法严格控制指令的运动时间，可能会出现机械臂响应速度较慢的情况
+FUSION mode is not a general control mode. It is a **high-speed response** mode to adapt to application scenarios such as VR teleoperation and exoskeleton following. In CP mode, we can achieve speed connection of motion commands, but since the movement time of the command cannot be strictly controlled, the robot arm may respond slowly
 
-为了解决联动场景中的延迟问题，FUSION模式严格限制了指令的运动周期，用户可规定运动指令的执行时间，**每一段的周期T是可控的，周期的控制优先级高于位置**：
+In order to solve the delay problem in the linkage scene, FUSION mode strictly limits the movement cycle of the command. The user can specify the execution time of the motion command. **The cycle T of each segment is controllable, and the control priority of the cycle is higher than the position**:
 
 <img src="resource\fusion_time.png">
 
-使用以下接口可切换至FUSION模式
+Use the following interface to switch to FUSION mode
 
-基于**位置环**的融合规划,适用于对位置精度要求高的场景，**适用于VR控制**
+Based on **position loop** fusion planning, it is suitable for scenarios with high position accuracy requirements and **suitable for VR control**
 
-    set_movement_type(2) #pos
+set_movement_type(2) #pos
 
+Based on the **velocity loop** fusion planning, it is suitable for application scenarios with low position accuracy requirements, and **suitable for application scenarios such as exoskeleton linkage!**
 
-基于**速度环**的融合规划，适用于对位置精度要求低的的应用场景，**适用于外骨骼联动等应用场景！**
+set_movement_type(3) #speed
 
-    set_movement_type(3) #speed
+**Note that in velocity loop mode, the machine will follow the differential velocity of the sampling point instead of the actual position!** **
 
-**注意，在速度环模式下，机器会跟随采样点位的差分速度而不是实际位置！**
+After enabling fusion mode, use the following API to start velocity fusion control.
 
-开启融合模式后，使用以下接口开始速度融合控制
+send_angles(angles, time)
+send_coords(coords, time)
 
-    send_angles(angles, time)
-    send_coords(coords, time)
+Where angles\coords represents the target position, and time represents the control period (in 7ms). For example:
 
-其中angles\coords表示目标位置，time表示控制周期（单位为7ms），例如：
+send_angles([0, 0, 0, 0, 0, 0, 0], 3)
 
-    send_angles([0, 0, 0, 0, 0, 0, 0], 3)
+** indicates reaching the position [0, 0, 0, 0, 0, 0, 0] within 3 periods (3*7=21ms)**
 
-**表示在3个周期（3*7=21ms）内抵达[0, 0, 0, 0, 0, 0, 0]位置**
+## 3. Tracking Example Implementation
 
+The velocity fusion API provided in this article is suitable for applications with a **position sampler**. The sampler collects position data at a fixed sampling period and sends it to the robot arm, enabling robot tracking.
 
-## 3.跟踪案例实现
+#### I have included two mouse tracking examples in the mouse_follow folder to help users use the velocity fusion API.
 
-本文提供的速度融合接口适用于带**位置采样器**的应用场景，采集器以固定采样周期采集位置数据并下发给机械臂，从而实现机械臂跟随
+mouse.py Coordinate tracking
+mouse_joint.py Angle Following
 
-#### 我在mouse_follow文件夹中存放了两个鼠标跟随的案例帮助用户使用速度融合接口
-
-    mouse.py    坐标跟随
-    mouse_joint.py  角度跟随
-
-*在上述脚本中，我用鼠标作为采样器模拟了MercuryA1跟随的应用场景，用户移动鼠标采集位置信息，通过调用速度融合接口即可实现机械臂的跟随效果*
+*In the above script, I used the mouse as a sampler to simulate the MercuryA1 following application scenario. The user moves the mouse to collect position information, and the robotic arm can achieve following effects by calling the velocity fusion interface.*
 <img src="resource\mouse.gif">
 
 ---
 
+#### I have stored MercuryX1 coordinate following examples in the mouse_follow\X1 folder.
 
-#### 我在mouse_follow\X1文件夹中存放了MercuryX1的坐标跟随案例
-    mouse.py    双臂坐标跟随
+mouse.py Dual-Arm Coordinate Following
 
 <img src="resource\X1.gif">
 
-*用户可基于此框架进行VR坐标控制的功能开发*
+*Users can develop VR coordinate control functions based on this framework.*
 
 ---
 
-#### 在ex_mercury_follow文件夹中存放了外骨骼控制MercuryX1、B1的案例代码和说明
-    MercuryControl.py 外骨骼跟随主程序
-    exoskeleton_api.py 外骨骼控制库
+#### The ex_mercury_follow folder contains example code and instructions for controlling the MercuryX1 and B1 exoskeleton.
 
-*在上述脚本中，外骨骼作为采样器，用户通过转动外骨骼关节采集关节信息，通过调用速度融合接口即可实现机械臂的跟随效果*
+MercuryControl.py Exoskeleton Following Main Program
+
+exoskeleton_api.py Exoskeleton Control Library
+
+*In the above script, the exoskeleton acts as a sampler. The user rotates the exoskeleton joints to collect joint information. By calling the velocity fusion interface, the robotic arm can achieve a following effect.*
 <img src="resource\exoskeleton.gif">
 
+## 4. Common Problems Using the Velocity Fusion Interface
 
-## 4.速度融合接口使用的常见问题
+**1. If the target position cannot be reached within the specified cycle, it will move to the maximum distance within the cycle.**
 
-**1.若在指定周期内无法抵达目标位置，则会运动到周期内的最远距离**
+**2. If the robotic arm does not receive a new movement command after completing the specified cycle, it will decelerate to a standstill at the maximum deceleration rate.**
 
-**2.若在机械臂执行完指定周期后仍未收到新的运动指令，则会以最大减速度减速至静止**
+**3. The velocity loop sampling frequency is recommended to be less than 100Hz.**
 
-**3.速度环的采样频率建议小于100Hz**
+#### Execution Stalls
+* Due to the limitations of Rule 2, the sampler's sampling frequency must be higher than the execution frequency. Otherwise, when the robot's internal point buffer is empty, an emergency stop will occur, causing lag.
+**(The sampling period can be obtained using time.time() in the script. The execution period is described in Chapter 2, Velocity Fusion Interface. Generally, a sampling period of 10-20ms is recommended, and an execution period of TIME>=3 (3*7=21ms).)**
 
-#### 执行卡顿
-* 由于规则2的限制，采样器的采样频率需高于执行频率，否则当机械臂内部点位缓存为空时，会发生急停引发卡顿
-**(采样周期可通过脚本中的time.time()得到，执行周期为见第2章速度融合接口说明,一般情况下建议采样周期为10~20ms，执行周期为TIME>=3(3*7=21ms))**
+* Under position loop fusion control, the robot is highly sensitive to position. If the differential velocity of the points collected by the sampler is not smooth, such as during emergency stops and starts, it will cause execution lag.
+**(In most cases, velocity loop control is recommended unless you have high accuracy requirements and understand planned acceleration and deceleration.)**
 
-* 在位置环的融合控制下，机械臂对位置高度敏感，若采样器采集到的点位差分速度不平滑，例如存在急停和急启动的情况，会导致执行卡顿
-**（大部分情况建议使用速度环控制，除非你对精度要求很高，并且了解规划的加减速知识）**
+* Under velocity loop fusion control, the robot uses the sampler's differential velocity to control its movement. If the sampling frequency is too high (>100Hz), the differential velocity may be too low, causing execution lag.
+**(Adding a 10ms delay is sufficient.)**
 
-* 在速度环的融合控制下，机械臂通过采样器的差分速度控制运动趋势，若采样频率过高(>100hz)则可能导致差分速度过小，引发执行卡顿
-**(加10ms延迟即可)**
+#### Position Error
 
-#### 位置误差
+* Due to the limitations of Rule 1, positional errors may occur in position mode.
 
-* 由于规则1的限制，位置模式下可能出现位置误差
-**(多次发送目标位置即可消除该误差)**
+**(This error can be eliminated by sending the target position multiple times.)**
 
-* 在速度环的融合控制下，由于接口存在速度的映射关系，机械臂会出现位置的累积误差
-**(中断联动控制，待机械臂停止后重新调用融合接口，机械臂会自动校准位置误差)**
+* Under the fusion control of the speed loop, due to the speed mapping relationship at the interface, the robotic arm will experience cumulative positional errors.
+
+**(Interrupt the linkage control; after the robotic arm stops and the fusion interface is called again, the robotic arm will automatically calibrate the positional error.)**
