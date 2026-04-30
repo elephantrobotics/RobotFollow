@@ -1,0 +1,20 @@
+{
+  "single_arm_port": "/dev/ttyAMA1",
+  "left_arm_port": "/dev/left_arm",
+  "right_arm_port": "/dev/right_arm",
+  "exoskeleton_port": "/dev/ttyACM2",
+  "send_interval_ms": 10.0,
+  "movement_type": 4,
+  "kp": 16,
+  "enable_read_angles": true,
+  "read_angles_interval_ms": 100.0,
+  "vr_mode": true,
+  "enable_gripper": true,
+  "mouse_coord_x_scale": -0.15,
+  "mouse_coord_y_scale": -0.15,
+  "mouse_joint_0_scale": -0.05,
+  "mouse_joint_3_scale": -0.05,
+  "mouse_x1_scale": 0.3,
+  "a1_initial_angles": [0, 0, 0, -90, 0, 90, 0],
+  "x1_initial_angles": [0, 30, 0, -120, 0, 90, 0]
+}
