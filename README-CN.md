@@ -1,3 +1,5 @@
+注意：最新的更改已更新至develop分支!
+
 # RobotFollow
 此项目用作帮助用户实现Mercury系列机型(A1/B1/X1)的手臂跟随效果
 

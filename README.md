@@ -1,3 +1,5 @@
+Note: The latest changes have been updated to the develop branch!
+
 # RobotFollow
 This project helps users achieve arm tracking for Mercury series robots (A1/B1/X1).
 
