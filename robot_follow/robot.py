@@ -43,7 +43,7 @@ def start_angles_reader(arms: dict[str, object], interval_ms: float, *, enabled:
         while True:
             for name, arm in arms.items():
                 try:
-                    print(f"read_angles,{name},{arm.get_angles()}")
+                    print(f"read_angles_coords,{name},{arm.get_base_coords(),arm.get_angles()}")
                 except Exception as exc:
                     print(f"read_angles_error,{name},{exc}")
             time.sleep(interval_s)

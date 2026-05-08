@@ -14,7 +14,7 @@ RobotFollow 是 Mercury 系列机械臂的联动控制示例项目，面向鼠�
 pip install pymycobot pynput pyserial
 ```
 
-### 2. 确认固件与烧录（20260430更新固件）
+### 2. 确认固件与烧录（20260508更新固件）
 
 运行 CP/FUSION 跟随示例前，需要确认 `pymycobot` 版本和机械臂固件版本匹配，并且固件支持对应的运动模式。
 
@@ -28,8 +28,9 @@ print(mc.get_system_version())
 固件烧录属于本机交互操作，需要用户在本机连接机械臂、选择正确串口、机型和固件文件后完成。
 本项目中的固件为未上线的正式版，在CP模式中做了优化，建议烧录最新版固件:
 ```text
-mercury_firmware/MercuryX1_left_v2.1.0_20260430
-mercury_firmware/MercuryX1_right_v2.1.0_20260430
+修复同步读写卡顿问题
+mercury_firmware/MercuryX1_left_v2.1.1_20260508
+mercury_firmware/MercuryX1_right_v2.1.1_20260508
 
 resource/MercuryX1固件烧录方法
 ```
@@ -322,8 +323,9 @@ Firmware burning is an interactive local operation. The user needs to connect th
 The firmware included in this project is an unreleased official version with CP mode optimizations. It is recommended to burn the latest firmware:
 
 ```text
-mercury_firmware/MercuryX1_left_v2.1.0_20260430
-mercury_firmware/MercuryX1_right_v2.1.0_20260430
+Fix the issue of synchronous read and write lag
+mercury_firmware/MercuryX1_left_v2.1.1_20260508
+mercury_firmware/MercuryX1_right_v2.1.1_20260508
 
 resource/MercuryX1固件烧录方法
 ```
